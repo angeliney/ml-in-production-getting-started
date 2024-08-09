@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: app-web
-          image: angelineygeorgian/catnip:latest
+          image: angeliney/catnip:latest
           ports:
           - containerPort: 5000
 ---
