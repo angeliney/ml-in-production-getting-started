@@ -7,6 +7,6 @@ spec:
   template:
     spec:
       containers:
-        - image: hub.docker.com/r/angelineygeorgian/hello-world/:latest
+        - image: angeliney/hello-world:latest
           name: job-app-hello-world
       restartPolicy: Never

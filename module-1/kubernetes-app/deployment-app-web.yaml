@@ -15,7 +15,9 @@ spec:
     spec:
       containers:
         - name: app-web
-          image: hub.docker.com/r/angelineygeorgian/catnip:latest
+          image: angelineygeorgian/catnip:latest
+          ports:
+          - containerPort: 5000
 ---
 apiVersion: v1
 kind: Service

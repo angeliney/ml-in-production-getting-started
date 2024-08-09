@@ -4,5 +4,5 @@ metadata:
   name: pod-app-web
 spec:
   containers:
-    - image: hub.docker.com/r/angelineygeorgian/catnip:latest
+    - image: angeliney/catnip:latest
       name: pod-app-web
