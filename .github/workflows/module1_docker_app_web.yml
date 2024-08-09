@@ -9,7 +9,7 @@ on:
     branches:
       - main
     paths:
-      - 'module-1/**'
+      - 'module-1/app-web/**'
 
 jobs:
   build:

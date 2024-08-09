@@ -9,7 +9,7 @@ on:
     branches:
       - main
     paths:
-      - 'module-1/**'
+      - 'module-1/hello-world/**'
 
 jobs:
   build:
@@ -29,5 +29,5 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          context: "{{defaultContext}}:module-1"
+          context: "{{defaultContext}}:module-1/hello-world"
           tags: ${{ vars.DOCKERHUB_USERNAME }}/hello-world:latest

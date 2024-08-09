@@ -4,6 +4,6 @@ metadata:
   name: pod-app-hello-world
 spec:
   containers:
-    - image: hub.docker.com/r/angelineygeorgian/hello-world:latest
+    - image: angelineygeorgian/hello-world:latest
       name: pod-app-hello-world
   restartPolicy: Never
