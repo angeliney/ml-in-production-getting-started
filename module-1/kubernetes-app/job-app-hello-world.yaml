@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-app-hello-world
+spec:
+  parallelism: 2
+  template:
+    spec:
+      containers:
+        - image: angeliney/hello-world:latest
+          name: job-app-hello-world
+      restartPolicy: Never
