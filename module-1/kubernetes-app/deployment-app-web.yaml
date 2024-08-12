@@ -26,8 +26,9 @@ metadata:
   labels:
     app: deployments-app-web
 spec:
+  type: LoadBalancer
   ports:
-  - port: 8080
-    protocol: TCP
+    - port: 80
+      targetPort: 5000
   selector:
     app: deployments-app-web
