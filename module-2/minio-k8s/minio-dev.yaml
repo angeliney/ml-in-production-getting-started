@@ -22,12 +22,11 @@ metadata:
 spec:
   containers:
   - name: minio
-    image: quay.io/minio/minio:latest
+    image: minio/minio:latest
     command:
-    - /bin/bash
-    - -c
+    - server
     args: 
-    - minio server /data --console-address :9090
+    - /data --console-address :9001
     volumeMounts:
     - mountPath: /data
       name: localvolume # Corresponds to the `spec.volumes` Persistent Volume

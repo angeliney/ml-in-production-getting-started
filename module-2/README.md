@@ -16,3 +16,12 @@ docker build . -t angeliney/minio-docker:latest
 docker run -p 9001:9001 angeliney/minio-docker:latest
 ```
 Go to `http://127.0.0.1:9001` to access the WebUI.
+
+### Kubernetes
+Follow `https://min.io/docs/minio/kubernetes/upstream/index.html` or the following:
+```sh
+cd minio-k8s
+kubectl apply -f minio-dev.yaml
+kubectl port-forward pod/minio 9000 9001 -n minio-dev
+kubectl get pods -n minio-dev
+```
