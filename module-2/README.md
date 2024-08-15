@@ -10,3 +10,9 @@ chmod +x minio
 Go to `http://172.21.46.1:39539` or the printed URL to see the WebUI.
 
 ### Docker
+```sh
+cd minio-docker
+docker build . -t angeliney/minio-docker:latest
+docker run -p 9001:9001 angeliney/minio-docker:latest
+```
+Go to `http://127.0.0.1:9001` to access the WebUI.

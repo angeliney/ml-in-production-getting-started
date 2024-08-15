@@ -1,18 +1,10 @@
-FROM ubuntu:oracular-20240617
-
-RUN  apt-get update \
-  && apt-get install -y wget
+FROM minio/minio
 
 # Set a directory for the app
 WORKDIR /usr/src/app
 
-# Copy script
-COPY run.sh .
-COPY data data/
+EXPOSE 9000
+EXPOSE 9001
 
-# tell the ports for API and WebUI
-EXPOSE 9000 30000-59999
-
-# Make a data container
-RUN chmod +x ./run.sh
-CMD ["bash", "./run.sh"]
+ENTRYPOINT ["minio"]
+CMD ["server","/data","--console-address",":9001"]
