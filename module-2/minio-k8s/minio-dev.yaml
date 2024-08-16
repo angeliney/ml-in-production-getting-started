@@ -18,20 +18,25 @@ metadata:
   labels:
     app: minio
   name: minio
-  namespace: minio-dev # Change this value to match the namespace metadata.name
 spec:
   containers:
   - name: minio
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     command:
-    - server
+    - /bin/bash
+    - -c
     args: 
-    - /data --console-address :9001
+    - minio server /data --console-address :9090
+    env:
+    - name: MINIO_ROOT_USER
+      value: minioadmin
+    - name: MINIO_ROOT_PASSWORD
+      value: minioadmin
+    - name: MINIO_BROWSER_LOGIN_ANIMATION
+      value: 'off'      
     volumeMounts:
     - mountPath: /data
       name: localvolume # Corresponds to the `spec.volumes` Persistent Volume
-  nodeSelector:
-    kubernetes.io/hostname: kubealpha.local # Specify a node label associated to the Worker Node on which you want to deploy the pod.
   volumes:
   - name: localvolume
     hostPath: # MinIO generally recommends using locally-attached volumes
