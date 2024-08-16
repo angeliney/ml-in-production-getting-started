@@ -22,6 +22,6 @@ Follow `https://min.io/docs/minio/kubernetes/upstream/index.html` or the followi
 ```sh
 cd minio-k8s
 kubectl apply -f minio-dev.yaml
-kubectl port-forward pod/minio 9000 9001 -n minio-dev
+kubectl port-forward pod/minio 9000 9090
 kubectl get pods -n minio-dev
 ```
