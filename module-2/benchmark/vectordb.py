@@ -1,3 +1,4 @@
+import time
 import lancedb
 import pandas as pd
 import numpy as np
@@ -5,12 +6,12 @@ import pyarrow as pa
 import soundfile as sf
 
 
-def load_and_process_audio_files(chunk_size=44100 * 5):
+def load_and_process_audio_files(file_range=(1, 11), chunk_size=44100 * 5):
     # List to hold dictionaries with chunked audio data
     sound_arrays = []
 
     # Process each file
-    for num in range(1, 51):
+    for num in range(file_range[0], file_range[1]):
         for letter in ["a", "b"]:
             # Load the audio file
             data, sample_rate = sf.read(f"CSD/english/wav/en{num:03}{letter}.wav")
@@ -32,15 +33,22 @@ def load_and_process_audio_files(chunk_size=44100 * 5):
 
 
 if __name__ == "__main__":
-    sound_arrays = load_and_process_audio_files()
-
+    file_chunks = 10
+    
     uri = "data/audio-lancedb"
     db = lancedb.connect(uri)
     
-    print("Creating table...")
-    tbl = db.create_table("audio_dataset", data=sound_arrays[:10])
-    # Got killed here when using the full list
+    for i in range(1, 51, file_chunks):
+        print(f"Processing files {i} to {i + file_chunks}...")
+        sound_arrays = load_and_process_audio_files(file_range=(i, i + file_chunks))
+        if i == 1:
+            tbl = db.create_table("audio_dataset", data=sound_arrays)
+        else:
+            tbl.add(sound_arrays)
     
     print("Searching for similar vectors...")
     input_array = np.random.random(44100*5)
+    start_time = time.time()
     tbl.search(input_array).limit(2).to_pandas()
+    end_time = time.time()
+    print(f"Search time: {end_time - start_time} seconds")

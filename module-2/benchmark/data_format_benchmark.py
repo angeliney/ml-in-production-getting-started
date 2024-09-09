@@ -7,6 +7,7 @@ import numpy as np
 def load_and_process_audio_files():
     sound_arrays = []
 
+    start_time = time.time()
     for num in range(1, 5):
         for letter in ["a", "b"]:
             # print(f"Loading en{num:03}{letter}")
@@ -16,6 +17,8 @@ def load_and_process_audio_files():
                 "sample_rate": sample_rate,
                 "filename": f"en{num:03}{letter}"
             })
+    end_time = time.time()
+    print(f"Time to load audio files: {end_time - start_time} seconds")
     
     df = pd.DataFrame(sound_arrays)
 
