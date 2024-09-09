@@ -3,4 +3,4 @@ outs:
   size: 1443007269
   nfiles: 18
   hash: md5
-  path: data
+  path: lancedb-data
