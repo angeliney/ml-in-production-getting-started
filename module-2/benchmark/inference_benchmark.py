@@ -13,7 +13,7 @@ def load_and_process_audio_files(chunk_size=44100 * 5):
     for num in range(1, 51):
         for letter in ["a", "b"]:
             # Load the audio file
-            data, sample_rate = sf.read(f"CSD/english/wav/en{num:03}{letter}.wav")
+            data, sample_rate = sf.read(f"./data/CSD/english/wav/en{num:03}{letter}.wav")
             data = np.array(data)
             # Combine stereo channels into mono
             if np.ndim(data) == 2:
@@ -84,10 +84,11 @@ def benchmark_inference(input_array, df, num_processes):
     print(f"Multiple processes closest filename: {multiple_filename}, distance: {multiple_distance}")
 
 if __name__ == '__main__':
-    df = load_and_process_audio_files()
+    chunk_size = 44100 * 5
+    df = load_and_process_audio_files(chunk_size=chunk_size)
     
     # Input array
-    input_array = np.random.random(44100*5)
+    input_array = np.random.random(chunk_size)
 
     # Benchmark with 4 processes
     benchmark_inference(input_array, df, num_processes=4)

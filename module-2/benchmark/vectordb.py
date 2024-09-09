@@ -14,7 +14,7 @@ def load_and_process_audio_files(file_range=(1, 11), chunk_size=44100 * 5):
     for num in range(file_range[0], file_range[1]):
         for letter in ["a", "b"]:
             # Load the audio file
-            data, sample_rate = sf.read(f"CSD/english/wav/en{num:03}{letter}.wav")
+            data, sample_rate = sf.read(f"./data/CSD/english/wav/en{num:03}{letter}.wav")
             data = np.array(data)
             # Combine stereo channels into mono
             if np.ndim(data) == 2:
@@ -34,20 +34,21 @@ def load_and_process_audio_files(file_range=(1, 11), chunk_size=44100 * 5):
 
 if __name__ == "__main__":
     file_chunks = 10
+    chunk_size = 44100 * 10
     
-    uri = "data/audio-lancedb"
+    uri = "data/lancedb-data/audio-lancedb"
     db = lancedb.connect(uri)
     
     for i in range(1, 51, file_chunks):
         print(f"Processing files {i} to {i + file_chunks}...")
-        sound_arrays = load_and_process_audio_files(file_range=(i, i + file_chunks))
+        sound_arrays = load_and_process_audio_files(file_range=(i, i + file_chunks), chunk_size=chunk_size)
         if i == 1:
             tbl = db.create_table("audio_dataset", data=sound_arrays)
         else:
             tbl.add(sound_arrays)
     
     print("Searching for similar vectors...")
-    input_array = np.random.random(44100*5)
+    input_array = np.random.random(chunk_size)
     start_time = time.time()
     tbl.search(input_array).limit(2).to_pandas()
     end_time = time.time()
