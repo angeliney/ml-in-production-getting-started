@@ -1,6 +1,6 @@
 outs:
-- md5: 66a59817fbe3269c9fc049bf9ae2c725.dir
-  size: 1443007269
-  nfiles: 18
+- md5: 516d77a6b8c7f7662af7d89359376a0e.dir
+  size: 9755600568
+  nfiles: 111
   hash: md5
   path: lancedb-data
