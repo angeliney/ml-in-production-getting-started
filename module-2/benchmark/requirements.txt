@@ -1,0 +1,7 @@
+soundfile==0.12.1
+pandas==2.2.2
+pyarrow==17.0.0
+tables==3.10.1
+numpy==2.1.1
+mosaicml-streaming
+lancedb

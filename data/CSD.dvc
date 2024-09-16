@@ -1,0 +1,6 @@
+outs:
+- md5: b73e6e493abcfd00a1da9bcd3f11e1a2.dir
+  size: 1473976924
+  nfiles: 100
+  hash: md5
+  path: CSD
