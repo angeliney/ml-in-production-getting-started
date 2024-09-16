@@ -1,4 +1,4 @@
-name: module-1/build-docker
+name: module-2/build-minio-docker
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
     branches:
       - main
     paths:
-      - 'module-1/hello-world/**'
+      - 'module-2/minio-docker/**'
 
 jobs:
   build:
@@ -30,5 +30,5 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          context: "{{defaultContext}}:module-1/hello-world"
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/hello-world:latest
+          context: "{{defaultContext}}:module-2/minio-docker"
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/minio-docker:latest
