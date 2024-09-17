@@ -163,3 +163,5 @@ cython_debug/
 
 .dvc/cache
 .dvc/tmp
+/module-3/experiments/wandb
+module-3/experiments/gcp_keys.json
