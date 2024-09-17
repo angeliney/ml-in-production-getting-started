@@ -1,9 +1,11 @@
+import os
 import pandas as pd
 import numpy as np 
 import lancedb
 import wandb
 import librosa
 import torch
+from dotenv import load_dotenv
 from transformers import (
     Wav2Vec2Processor, Wav2Vec2Model, AutoProcessor, AutoModel, WhisperFeatureExtractor
 )
@@ -159,8 +161,6 @@ def embed_lookup_data(embed_fn, df, db_name):
         if db_setup:
             feat_tbl.add(sound_arrays)
         else:
-            if db_name in db.table_names():
-                db.drop_table(db_name)
             feat_tbl = db.create_table(db_name, data=sound_arrays)
             db_setup = True
 
@@ -183,37 +183,49 @@ def embed_with_model(audio, processor, model, output_field=None):
 
 
 if __name__ == '__main__':
-    wandb.login()
+    load_dotenv(".env")
+    wandb.login(key=os.getenv("WANDB_API_KEY"))
 
-    uri = "../../data/lancedb-data/audio-lancedb"
+    # uri = "../../data/lancedb-data/audio-lancedb"
+    uri = "gs://children_song_retrieval/audio-lancedb"
     db = lancedb.connect(uri)
     db_tbl = db.open_table("audio_dataset")
-
     audio_df = db_tbl.to_pandas()
 
-    for search_metric in ["l2", "cosine", "dot"]:
+    search_metrics = ["l2", "cosine", "dot"]
+
+    # Experiment without any embedding
+    print("Experiment without any embedding")
+    for search_metric in search_metrics:
+        print(search_metric)
         test_and_log(lambda x: search(x, db_tbl, search_metric),
                     None,
                     search_metric,
                     "none")
         
-    # Engineered feature - embed lookup data
-    embed_lookup_data(
-        lambda audio: extract_features(audio, aggregate="summary_stat"),
-        audio_df,
-        "audio_feat_eng_sumstat"
-    )
+    # Experiment with engineered features: MFCC, Chroma, Mel-spectrogram - flattened or summary statistics
+    # First, extract the features and embed them
+    print("Experiment with engineered features")
+    if "audio_feat_eng_sumstat" not in db.table_names():
+        embed_lookup_data(
+            lambda audio: extract_features(audio, aggregate="summary_stat"),
+            audio_df,
+            "audio_feat_eng_sumstat"
+        )
 
-    embed_lookup_data(
-        lambda audio: extract_features(audio, aggregate="full"),
-        audio_df,
-        "audio_feat_eng_full"
-    )
+    if "audio_feat_eng_full" not in db.table_names():
+        embed_lookup_data(
+            lambda audio: extract_features(audio, aggregate="full"),
+            audio_df,
+            "audio_feat_eng_full"
+        )
 
     sumstat_tbl = db.open_table("audio_feat_eng_sumstat")
     fullfeat_tbl = db.open_table("audio_feat_eng_full")
 
-    for search_metric in ["l2", "cosine", "dot"]:
+    # Test the search with the new embeddings
+    for search_metric in search_metrics:
+        print(search_metric)
         test_and_log(
             lambda x: search(x, sumstat_tbl, search_metric),
             lambda audio: extract_features(audio, aggregate="summary_stat"),
@@ -228,98 +240,47 @@ if __name__ == '__main__':
             "audio_feat_eng_full"
         )
 
-    # Wav2Vec2
-    # Load the pretrained Wav2Vec2 model and processor
-    processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
-    model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-base-960h")
-
-    embed_lookup_data(
-        lambda audio: embed_with_model(audio, processor, model, output_field="last_hidden_state").numpy().flatten(),
-        audio_df,
-        "audio_feat_wav2vec2_last_hidden_state"
-    )
-
-    embed_lookup_data(
-        lambda audio: embed_with_model(audio, processor, model, output_field="extract_features").numpy().flatten(),
-        audio_df,
-        "audio_feat_wav2vec2_extract_features"
-    )
-
-    wav2vec2_hidden_state_tbl = db.open_table("audio_feat_wav2vec2_last_hidden_state")
-    wav2vec2_extract_feat_tbl = db.open_table("audio_feat_wav2vec2_extract_features")
-
-    for search_metric in ["l2", "cosine", "dot"]:
-        test_and_log(
-            lambda x: search(x, wav2vec2_hidden_state_tbl, search_metric),
-            lambda audio: embed_with_model(audio, processor, model, output_field="last_hidden_state").numpy().flatten(),
-            search_metric,
-            "audio_feat_wav2vec2_last_hidden_state"
-        )
-
-        test_and_log(
-            lambda x: search(x, wav2vec2_extract_feat_tbl, search_metric),
-            lambda audio: embed_with_model(audio, processor, model, output_field="extract_features").numpy().flatten(),
-            search_metric,
-            "audio_feat_wav2vec2_extract_features"
-        )
-
-    # HuBERT
-    model_name = "facebook/hubert-large-ls960-ft"
-    processor = AutoProcessor.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name)
-
-    embed_lookup_data(
-        lambda audio: embed_with_model(audio, processor, model, output_field="last_hidden_state").numpy().flatten(),
-        audio_df,
-        "audio_feat_hubert_large_last_hidden_state"
-    )
-
-    hubert_large_hidden_state_tbl = db.open_table("audio_feat_hubert_large_last_hidden_state")
-
-    for search_metric in ["l2", "dot"]:
-        print(search_metric)
-        test_and_log(
-            lambda x: search(x, hubert_large_hidden_state_tbl, search_metric),
-            lambda audio: embed_with_model(audio, processor, model, output_field="last_hidden_state").numpy().flatten(),
-            search_metric,
-            "audio_feat_hubert_large_last_hidden_state"
-        )
-
-    # Whisper
-    models = ["openai/whisper-tiny", "openai/whisper-base", "openai/whisper-small", "openai/whisper-medium"]
-
+    # Try with pretrained models
+    # We're going to extract the last_hidden_state, although technically can also experiment with extract_features
+    models = ["facebook/wav2vec2-base-960h", "facebook/hubert-large-ls960-ft", "openai/whisper-tiny"]
+    
+    print("Experiment with pretrained models")
     for model_name in models:
         print(model_name)
-        feature_extractor = WhisperFeatureExtractor.from_pretrained(model_name)
-        processor = AutoProcessor.from_pretrained(model_name)
-        def custom_processor(audio, sampling_rate=16000, return_tensors="pt", **kwargs):
-            return processor.feature_extractor.pad([{
-                    "input_features":
-                    feature_extractor(audio, sampling_rate=sampling_rate)["input_features"][0]}],
-                return_tensors=return_tensors)
+        if "openai" not in model_name:
+            processor = Wav2Vec2Processor.from_pretrained(model_name)
+            model = Wav2Vec2Model.from_pretrained(model_name)
 
-        model = AutoModel.from_pretrained(model_name)
-        def custom_model(input_features):
-            return model.encoder(input_features)
+        else:
+            whisper_feature_extractor = WhisperFeatureExtractor.from_pretrained(model_name)
+            whisper_processor = AutoProcessor.from_pretrained(model_name)
+            def processor(audio, sampling_rate=16000, return_tensors="pt", **kwargs):
+                return whisper_processor.feature_extractor.pad([{
+                        "input_features":
+                        whisper_feature_extractor(audio, sampling_rate=sampling_rate)["input_features"][0]}],
+                    return_tensors=return_tensors)
 
-
+            whisper_model = AutoModel.from_pretrained(model_name)
+            def model(input_features):
+                return whisper_model.encoder(input_features)
+            
         db_name = f"audio_feat_{model_name.replace('/', '_').replace("-", "_")}_last_hidden_state"
         if db_name not in db.table_names():
             embed_lookup_data(
-                lambda audio: embed_with_model(audio, custom_processor, custom_model, output_field="last_hidden_state").numpy().flatten(),
+                lambda audio: embed_with_model(audio, processor, model, output_field="last_hidden_state").numpy().flatten(),
                 audio_df,
                 db_name
             )
 
         hidden_state_tbl = db.open_table(db_name)
 
-        for search_metric in ["l2", "cosine", "dot"]:
+        for search_metric in search_metrics:
             print(search_metric)
             test_and_log(
                 lambda x: search(x, hidden_state_tbl, search_metric),
-                lambda audio: embed_with_model(audio, custom_processor, custom_model, output_field="last_hidden_state").numpy().flatten(),
+                lambda audio: embed_with_model(audio, processor, model, output_field="last_hidden_state").numpy().flatten(),
                 search_metric,
                 db_name
-            )                                                                       
+            ) 
 
 
