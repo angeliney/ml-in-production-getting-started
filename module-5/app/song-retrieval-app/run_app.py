@@ -45,16 +45,21 @@ def setup():
     uri = "gs://children_song_retrieval/audio-lancedb"
     db = lancedb.connect(uri)
     sumstat_tbl = db.open_table("audio_feat_eng_sumstat")
-    return sumstat_tbl
+    db_tbl = db.open_table("audio_dataset")
+    return sumstat_tbl, db_tbl
 
 
-def retrieve_similar_songs(query_vector, db_tbl, metric="cosine"):
+def retrieve_similar_songs(query_vector, db_tbl, search_metric="cosine"):
     embedded_vector = extract_features(query_vector, aggregate="summary_stat")
     return search(embedded_vector, db_tbl, search_metric).to_pandas()
+
+def query_song(db_tbl, song_num, song_version, chunk_num):
+    retrieved = db_tbl.search().where(f"song_num = {song_num} AND song_version = '{song_version}' AND chunk_num = {chunk_num}").limit(10).to_pandas()
+    return retrieved
 
 
 if __name__ == '__main__':
     search_metric = "cosine"
-    sumstat_tbl = setup()
+    sumstat_tbl, db_tbl = setup()
     query_vector = np.random.rand(44100*10)
     print(retrieve_similar_songs(query_vector, sumstat_tbl, search_metric))
